@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>連携中...</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <p>LINE連携を完了させています。少々お待ちください...</p>
+    <script>
+        async function main() {
+            await liff.init({ liffId: "2009019428-ujHabd1Q" }); // 2009019428-ujHabd1Q
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                const userId = profile.userId;
+                const urlParams = new URLSearchParams(window.location.search);
+                const stripeId = urlParams.get('stripe_id');
+
+                // MakeのWebhook URLへデータを飛ばす
+                await fetch("https://hook.us2.make.com/3fppckn98uy6s0nv9wmapo6iw2lajp2h", { // https://hook.us2.make.com/3fppckn98uy6s0nv9wmapo6iw2lajp2h
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        line_user_id: userId,
+                        stripe_customer_id: stripeId
+                    })
+                });
+
+                // 完了後にLINEを自動で閉じる（またはサンクスページへ飛ばす）
+                alert("連携が完了しました！この画面を閉じてください。");
+                liff.closeWindow();
+            }
+        }
+        main();
+    </script>
+</body>
+</html>
