@@ -18,13 +18,12 @@
                     return;
                 }
 
-                // 2. データの取得（失敗しても止まらないようにする）
+                // 2. データの取得
                 let userId = "";
                 let email = "未取得";
                 try {
                     const profile = await liff.getProfile();
                     userId = profile.userId;
-                    // IDトークンからメールを抽出
                     const idToken = liff.getDecodedIDToken();
                     if (idToken && idToken.email) {
                         email = idToken.email;
@@ -33,19 +32,19 @@
                     console.log("プロフィール取得失敗:", e);
                 }
 
-                // 3. URLから stripe_id を取得
+                // 3. URLから customer_id を取得（サブスク対応版）
                 const urlParams = new URLSearchParams(window.location.search);
-                const stripeId = urlParams.get('stripe_id');
+                const customerId = urlParams.get('customer_id');
 
-                if (!stripeId) {
-                    alert("決済情報が見つかりません。リンクを再度確認してください。");
+                if (!customerId) {
+                    alert("顧客情報が見つかりません。リンクを再度確認してください。");
                     return;
                 }
 
-                // 4. Makeへ送信（エラーが出にくい形式に変更）
-                const webhookUrl = `https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o?stripe_id=${stripeId}&userId=${userId}&email=${encodeURIComponent(email)}`;
+                // 4. Makeへ送信
+                // stripe_idという名前で送信することで、Make側の既存設定を壊さずに済みます
+                const webhookUrl = `https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o?stripe_id=${customerId}&userId=${userId}&email=${encodeURIComponent(email)}`;
                 
-                // 応答を待たずに送信を実行
                 fetch(webhookUrl, { mode: 'no-cors' });
 
                 alert("連携が完了しました！公式LINEにお戻りください。");
