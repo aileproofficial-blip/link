@@ -9,28 +9,26 @@
     <p>LINE連携を完了させています。少々お待ちください...</p>
     <script>
         async function main() {
-            await liff.init({ liffId: "2009019428-ujHabd1Q" }); // 2009019428-ujHabd1Q
+            await liff.init({ liffId: "2009019428-ujHabd1Q" });
             if (!liff.isLoggedIn()) {
                 liff.login();
             } else {
                 const profile = await liff.getProfile();
                 const userId = profile.userId;
+                
+                // URLの末尾（?email=xxx）からメールアドレスを拾う
                 const urlParams = new URLSearchParams(window.location.search);
-                const stripeId = urlParams.get('stripe_id');
+                const email = urlParams.get('email');
 
-                // MakeのWebhook URLへデータを飛ばす
-                await fetch("https://hook.us2.make.com/3fppckn98uy6s0nv9wmapo6iw2lajp2h", { // https://hook.us2.make.com/3fppckn98uy6s0nv9wmapo6iw2lajp2h
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        line_user_id: userId,
-                        stripe_customer_id: stripeId
-                    })
-                });
-
-                // 完了後にLINEを自動で閉じる（またはサンクスページへ飛ばす）
-                alert("連携が完了しました！この画面を閉じてください。");
-                liff.closeWindow();
+                if (email) {
+                    // 最新のWebhook URLへ「email」と「userId」を飛ばす
+                    await fetch(`https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o?email=${email}&userId=${userId}`);
+                    
+                    alert("連携が完了しました！公式LINEにお戻りください。");
+                    liff.closeWindow();
+                } else {
+                    alert("エラー：メールアドレスが取得できませんでした。");
+                }
             }
         }
         main();
