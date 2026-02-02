@@ -7,12 +7,14 @@
 </head>
 <body>
     <p>LINE連携を完了させています。少々お待ちください...</p>
+
     <script>
         async function main() {
             try {
                 // 1. LIFFの初期化
                 await liff.init({ liffId: "2009019428-ujHabd1Q" });
-                
+
+                // 未ログインならログインへ
                 if (!liff.isLoggedIn()) {
                     liff.login();
                     return;
@@ -21,9 +23,11 @@
                 // 2. データの取得
                 let userId = "";
                 let email = "未取得";
+
                 try {
                     const profile = await liff.getProfile();
                     userId = profile.userId;
+
                     const idToken = liff.getDecodedIDToken();
                     if (idToken && idToken.email) {
                         email = idToken.email;
@@ -32,19 +36,29 @@
                     console.log("プロフィール取得失敗:", e);
                 }
 
-                // 3. URLから customer_id を取得
-                const urlParams = new URLSearchParams(window.location.search);
-                const customerId = urlParams.get('customer_id');
-
-                if (!customerId) {
-                    alert("顧客情報が見つかりません。リンクを再度確認してください。");
+                // userIdが取れないとPush送信できないので止める
+                if (!userId) {
+                    alert("LINEユーザーIDの取得に失敗しました。LINEアプリ内で開き直してください。");
                     return;
                 }
 
-                // 4. Makeへ送信（ラベルも customer_id に統一）
-                const webhookUrl = `https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o?customer_id=${customerId}&userId=${userId}&email=${encodeURIComponent(email)}`;
-                
-                fetch(webhookUrl, { mode: 'no-cors' });
+                // 3. URLから session_id（= cs_）を取得
+                const urlParams = new URLSearchParams(window.location.search);
+                const sessionId = urlParams.get("session_id");
+
+                if (!sessionId) {
+                    alert("決済セッション情報が見つかりません。リンクを再度確認してください。");
+                    return;
+                }
+
+                // 4. Makeへ送信（session_id として送る）
+                const webhookUrl =
+                    `https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o` +
+                    `?session_id=${encodeURIComponent(sessionId)}` +
+                    `&userId=${encodeURIComponent(userId)}` +
+                    `&email=${encodeURIComponent(email)}`;
+
+                fetch(webhookUrl, { mode: "no-cors" });
 
                 alert("連携が完了しました！公式LINEにお戻りください。");
                 liff.closeWindow();
@@ -54,6 +68,7 @@
                 alert("一時的なエラーです。もう一度お試しください。");
             }
         }
+
         main();
     </script>
 </body>
