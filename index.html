@@ -42,19 +42,20 @@
                     return;
                 }
 
-                // 3. URLから session_id（= cs_）を取得
+                // 3. URLから customer_id を取得（session_idから名称変更）
                 const urlParams = new URLSearchParams(window.location.search);
-                const sessionId = urlParams.get("session_id");
+                // ここでURLの ?customer_id= の値を読み取ります
+                const customerId = urlParams.get("customer_id") || urlParams.get("session_id");
 
-                if (!sessionId) {
-                    alert("決済セッション情報が見つかりません。リンクを再度確認してください。");
+                if (!customerId) {
+                    alert("顧客情報が見つかりません。リンクを再度確認してください。");
                     return;
                 }
 
-                // 4. Makeへ送信（session_id として送る）
+                // 4. Makeへ送信（ラベルを customer_id に統一）
                 const webhookUrl =
                     `https://hook.us2.make.com/fcjwyfv5fgzu9igj6ywczq2li5hhlv8o` +
-                    `?session_id=${encodeURIComponent(sessionId)}` +
+                    `?customer_id=${encodeURIComponent(customerId)}` +
                     `&userId=${encodeURIComponent(userId)}` +
                     `&email=${encodeURIComponent(email)}`;
 
